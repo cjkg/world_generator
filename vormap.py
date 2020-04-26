@@ -1,9 +1,9 @@
 import numpy as np
-from scipy.spatial import Voronoi, voronoi_plot_2d
+from scipy.spatial import Voronoi
 from tile import Tile
 
 class VorMap:
-    def __init__(self, generator_count, generator_min, generator_max, lloyd_relax):
+    def __init__(self, generator_count, generator_min, generator_max, lloyd_relax, game_seed):
         self.generator_count = generator_count
         self.generator_min = generator_min
         self.generator_max = generator_max
@@ -11,6 +11,7 @@ class VorMap:
         self.voronoi_map = self._set_voronoi()
         self.neighbor_dict = self._initialize_neighbor_dict()
         self.tiles = self._get_tiles()
+        self.seed = game_seed
 
     def _initialize_neighbor_dict(self):
         """initialize neighbor dict with empty set"""
@@ -28,10 +29,11 @@ class VorMap:
                 vertices = self._get_region_vertices(
                     reg, self.voronoi_map.vertices)
                 tile = Tile(list(vertices))
-                tiles.append(tile)
+                if self.generator_max >= tile.centroid[0] >= self.generator_min and self.generator_max >= tile.centroid[1] >= self.generator_min: 
+                    tiles.append(tile)
 
-                for vert in vertices:
-                    self.neighbor_dict[(vert)].add(tile)
+                    for vert in vertices:
+                        self.neighbor_dict[(vert)].add(tile)
 
         return tiles
 
@@ -41,6 +43,7 @@ class VorMap:
 
     def _set_voronoi(self):
         """Create a voronoi map with lloyd_relax many Lloyd Relaxations"""
+        #np.random.seed(seed=self.seed)
         vor = Voronoi(np.random.randint(
             self.generator_min, self.generator_max, (self.generator_count, 2)), qhull_options="Qc")
 
@@ -52,3 +55,4 @@ class VorMap:
             vor = Voronoi(centroids, qhull_options="Qc")
 
         return vor
+    
